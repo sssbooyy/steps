@@ -88,6 +88,8 @@
 // ⬇️ ВСТАВЬ СЮДА АДРЕС СВОЕЙ Realtime Database из консоли Firebase
 const DB_URL = "https://steps-cf45c-default-rtdb.europe-west1.firebasedatabase.app";
 // ─────────────────────────────────────────────────────────────
+// iCloud-ссылка на готовую «Быструю команду» (с вопросом при импорте про личный адрес)
+const SHORTCUT_LINK = "https://www.icloud.com/shortcuts/4d57d0670cc542f3854094f195de70d0";
 
 const app = document.getElementById("app");
 const configured = !DB_URL.includes("ВАШ-ПРОЕКТ");
@@ -310,6 +312,10 @@ function renderGroup() {
   document.querySelectorAll("[data-pick]").forEach(b => b.onclick = () => pickMe(b.dataset.pick));
   document.querySelectorAll("[data-copy]").forEach(b => b.onclick = () => copy(b.dataset.copy));
   document.getElementById("forget")?.addEventListener("click", e => { e.preventDefault(); forgetMe(); });
+  document.getElementById("install")?.addEventListener("click", async () => {
+    try { await navigator.clipboard.writeText(myUrl()); } catch {}
+    location.href = SHORTCUT_LINK;
+  });
 }
 
 function weekChart(list) {
@@ -362,17 +368,26 @@ function joinForm(list) {
 function guide() {
   const url = myUrl();
   const template = `{"today": ШАГИ, "date": "ДАТА", "days/ДАТА": ШАГИ, "updated": {".sv": "timestamp"}}`;
+  const quick = SHORTCUT_LINK ? `
+      <p class="hint">Шаги из «Здоровья» отправляет «Быстрая команда». Установка займёт минуту:</p>
+      <ol>
+        <li>Нажми кнопку ниже. Твой личный адрес скопируется, и откроются «Команды».</li>
+        <li>Нажми «Настроить команду». Когда спросят адрес, нажми в поле → <b>Вставить</b> → <b>Добавить команду</b>.</li>
+        <li>Запусти «Шаги» один раз и разреши доступ к <b>Шагам</b>. Готово!</li>
+      </ol>
+      <button id="install">📲 Установить команду</button>
+      <p class="hint" style="margin-top:10px">Открывай эту страницу на iPhone в Safari.</p>` : "";
   return `
     <div class="card" id="guide">
       <h2>Твоя «Быстрая команда»</h2>
-      <p class="hint">Она берёт шаги из приложения «Здоровье» и отправляет их сюда. Настраивается один раз, примерно за 5 минут.</p>
+      ${quick || `<p class="hint">Она берёт шаги из приложения «Здоровье» и отправляет их сюда. Настраивается один раз, примерно за 5 минут.</p>`}
 
-      <p style="margin-bottom:0"><b>Твой личный адрес</b> (никому не отправляй):</p>
+      <p style="margin-bottom:0;margin-top:16px"><b>Твой личный адрес</b> (никому не отправляй):</p>
       <code>${esc(url)}</code>
       <button class="secondary" data-copy="${esc(url)}">Скопировать адрес</button>
 
-      <details style="margin-top:16px" open>
-        <summary>Как собрать команду</summary>
+      <details style="margin-top:16px" ${SHORTCUT_LINK ? "" : "open"}>
+        <summary>${SHORTCUT_LINK ? "Собрать команду вручную" : "Как собрать команду"}</summary>
         <ol>
           <li>Открой <b>Команды</b> (Shortcuts) → <b>＋</b>. Назови команду «Шаги».</li>
           <li>Добавь действие <b>«Найти образцы Здоровья»</b> (Find Health Samples):
