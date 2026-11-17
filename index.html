@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Шаги">
+<meta name="theme-color" content="#16a34a">
+<title>Шаги с друзьями</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👟</text></svg>">
+<style>
+  :root {
+    --bg: #f4f6f5; --card: #ffffff; --text: #111827; --muted: #6b7280; --line: #e5e7eb;
+    --accent: #16a34a; --accent-soft: #dcfce7; --danger: #dc2626;
+    --c1: #16a34a; --c2: #f97316; --c3: #3b82f6; --c4: #a855f7; --c5: #ec4899; --c6: #eab308;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #0b0f0d; --card: #151a17; --text: #f3f4f6; --muted: #9ca3af; --line: #26302a;
+            --accent: #22c55e; --accent-soft: #143322; }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 16px/1.45 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+  main { max-width: 560px; margin: 0 auto; padding: 20px 16px 48px; }
+  h1 { font-size: 30px; margin: 8px 0 4px; letter-spacing: -0.02em; }
+  h2 { font-size: 18px; margin: 0 0 12px; }
+  .sub { color: var(--muted); margin: 0 0 20px; }
+  .card { background: var(--card); border-radius: 20px; padding: 18px; margin-bottom: 16px;
+          box-shadow: 0 1px 2px rgba(0,0,0,.04); }
+  button, .btn {
+    font: inherit; font-weight: 600; border: 0; border-radius: 12px; padding: 12px 16px;
+    background: var(--accent); color: #fff; cursor: pointer; width: 100%;
+  }
+  button.secondary { background: var(--accent-soft); color: var(--accent); }
+  button.small { width: auto; padding: 8px 12px; font-size: 14px; }
+  button:disabled { opacity: .5; }
+  input {
+    font: inherit; width: 100%; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--line);
+    background: var(--bg); color: var(--text); margin-bottom: 12px;
+  }
+  .row { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+  .row:last-child { border-bottom: 0; }
+  .medal { width: 34px; text-align: center; font-size: 22px; font-weight: 700; color: var(--muted); }
+  .grow { flex: 1; min-width: 0; }
+  .name { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .me-tag { color: var(--accent); font-weight: 600; }
+  .steps { font-weight: 700; font-variant-numeric: tabular-nums; font-size: 18px; }
+  .bar { height: 8px; background: var(--line); border-radius: 99px; margin-top: 6px; overflow: hidden; }
+  .bar > div { height: 100%; border-radius: 99px; background: var(--accent); transition: width .5s; }
+  .meta { color: var(--muted); font-size: 12px; margin-top: 4px; }
+  .chart { display: flex; align-items: flex-end; gap: 8px; height: 170px; padding-top: 8px; }
+  .day { flex: 1; display: flex; flex-direction: column; align-items: center; height: 100%; }
+  .bars { flex: 1; width: 100%; display: flex; align-items: flex-end; justify-content: center; gap: 2px; }
+  .bars > div { flex: 1; max-width: 14px; border-radius: 4px 4px 0 0; min-height: 2px; }
+  .dlabel { font-size: 11px; color: var(--muted); margin-top: 6px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 14px; font-size: 14px; }
+  .legend span::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 3px;
+                         background: var(--dot); margin-right: 6px; }
+  .legend b { font-variant-numeric: tabular-nums; }
+  code, .mono {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 13px; word-break: break-all;
+    background: var(--bg); border-radius: 10px; padding: 10px 12px; display: block; margin: 8px 0;
+  }
+  ol { padding-left: 20px; margin: 0; }
+  ol li { margin-bottom: 12px; }
+  .hint { color: var(--muted); font-size: 14px; }
+  .toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom)); transform: translateX(-50%);
+           background: var(--text); color: var(--bg); padding: 10px 16px; border-radius: 99px; font-size: 14px;
+           opacity: 0; transition: opacity .2s; pointer-events: none; }
+  .toast.show { opacity: 1; }
+  .err { color: var(--danger); font-size: 14px; }
+  .flex { display: flex; gap: 8px; }
+  details summary { cursor: pointer; font-weight: 600; }
+  details[open] summary { margin-bottom: 12px; }
+  .pick { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+  .empty { color: var(--muted); text-align: center; padding: 16px 0; }
+</style>
+</head>
+<body>
+<main id="app"></main>
+<div class="toast" id="toast"></div>
+
+<script>
+// ─────────────────────────────────────────────────────────────
+// ⬇️ ВСТАВЬ СЮДА АДРЕС СВОЕЙ Realtime Database из консоли Firebase
+const DB_URL = "https://steps-cf45c-default-rtdb.europe-west1.firebasedatabase.app";
+// ─────────────────────────────────────────────────────────────
+
+const app = document.getElementById("app");
+const configured = !DB_URL.includes("ВАШ-ПРОЕКТ");
+const COLORS = ["var(--c1)", "var(--c2)", "var(--c3)", "var(--c4)", "var(--c5)", "var(--c6)"];
+
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch {} },
+  del(k) { try { localStorage.removeItem(k); } catch {} }
+};
+
+function randomId(n) {
+  const abc = "abcdefghijkmnpqrstuvwxyz23456789";
+  return Array.from(crypto.getRandomValues(new Uint8Array(n)), b => abc[b % abc.length]).join("");
+}
+function dayKey(d = new Date()) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+const fmt = n => Number(n || 0).toLocaleString("ru-RU");
+const rtf = new Intl.RelativeTimeFormat("ru", { numeric: "auto" });
+function ago(ts) {
+  if (!ts) return "";
+  const s = (ts - Date.now()) / 1000;
+  const a = Math.abs(s);
+  if (a < 60) return "только что";
+  if (a < 3600) return rtf.format(Math.round(s / 60), "minute");
+  if (a < 86400) return rtf.format(Math.round(s / 3600), "hour");
+  return rtf.format(Math.round(s / 86400), "day");
+}
+function toast(text) {
+  const t = document.getElementById("toast");
+  t.textContent = text;
+  t.classList.add("show");
+  clearTimeout(toast.timer);
+  toast.timer = setTimeout(() => t.classList.remove("show"), 1600);
+}
+async function copy(text) {
+  try { await navigator.clipboard.writeText(text); toast("Скопировано"); }
+  catch { prompt("Скопируй вручную:", text); }
+}
+
+// ── Состояние ──
+let group = (location.hash.slice(1) || store.get("group") || "").trim();
+if (group.length < 20) group = "";
+if (group) {
+  store.set("group", group);
+  if (location.hash.slice(1) !== group) history.replaceState(null, "", "#" + group);
+}
+let me = group ? store.get("me:" + group) : null;
+let users = null;      // { id: {name, today, date, updated, days} }
+let loadError = "";
+
+const usersUrl = () => `${DB_URL}/groups/${group}/users`;
+const myUrl = () => `${usersUrl()}/${me}.json`;
+const inviteLink = () => `${location.origin}${location.pathname}#${group}`;
+
+async function load() {
+  if (!configured || !group) return;
+  try {
+    const r = await fetch(`${usersUrl()}.json`, { cache: "no-store" });
+    if (!r.ok) throw new Error(`Сервер ответил ${r.status}`);
+    users = (await r.json()) || {};
+    loadError = "";
+  } catch (e) {
+    loadError = "Не получилось загрузить данные: " + e.message;
+    if (!users) users = {};
+  }
+  render();
+}
+
+// ── Действия ──
+function createGroup() {
+  group = randomId(24);
+  store.set("group", group);
+  history.replaceState(null, "", "#" + group);
+  me = null;
+  users = {};
+  render();
+  load();
+}
+
+async function join(ev) {
+  ev.preventDefault();
+  const input = document.getElementById("name");
+  const name = input.value.trim().slice(0, 30);
+  if (!name) return;
+  const btn = ev.target.querySelector("button");
+  btn.disabled = true;
+  const id = randomId(10);
+  try {
+    const r = await fetch(`${usersUrl()}/${id}.json`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, today: 0, date: dayKey(), updated: { ".sv": "timestamp" } })
+    });
+    if (!r.ok) throw new Error(`Сервер ответил ${r.status}`);
+    me = id;
+    store.set("me:" + group, id);
+    users = { ...(users || {}), [id]: { name, today: 0, date: dayKey() } };
+    render();
+    load();
+    document.getElementById("guide")?.scrollIntoView({ behavior: "smooth" });
+  } catch (e) {
+    btn.disabled = false;
+    document.getElementById("joinErr").textContent = "Ошибка: " + e.message;
+  }
+}
+
+function pickMe(id) {
+  me = id;
+  store.set("me:" + group, id);
+  render();
+}
+function forgetMe() {
+  me = null;
+  store.del("me:" + group);
+  render();
+}
+
+// ── Отрисовка ──
+function render() {
+  if (!configured) return renderNotConfigured();
+  if (!group) return renderNoGroup();
+  renderGroup();
+}
+
+function renderNotConfigured() {
+  app.innerHTML = `
+    <h1>👟 Шаги с друзьями</h1>
+    <div class="card">
+      <h2>Почти готово</h2>
+      <p>Открой <b>index.html</b> и в строке <code>const DB_URL = "…"</code> вставь адрес своей
+      Realtime Database из консоли Firebase. Потом загрузи файл заново.</p>
+    </div>`;
+}
+
+function renderNoGroup() {
+  app.innerHTML = `
+    <h1>👟 Шаги с друзьями</h1>
+    <p class="sub">Каждый iPhone сам отправляет сюда шаги через «Быструю команду», а здесь все видят общую таблицу.</p>
+    <div class="card">
+      <h2>Новая группа</h2>
+      <p class="hint">Создай группу и отправь ссылку другу. Кто знает ссылку, тот видит результаты, поэтому делись ею только со своими.</p>
+      <button id="create">Создать группу</button>
+    </div>
+    <div class="card">
+      <h2>Уже есть приглашение?</h2>
+      <p class="hint">Просто открой ссылку, которую прислал друг.</p>
+    </div>`;
+  document.getElementById("create").onclick = createGroup;
+}
+
+function people() {
+  const today = dayKey();
+  return Object.entries(users || {}).map(([id, u], i) => ({
+    id,
+    name: u.name || "Без имени",
+    today: u.date === today ? (u.today || 0) : (u.days?.[today] || 0),
+    updated: u.updated,
+    days: u.days || {},
+    color: COLORS[i % COLORS.length]
+  }));
+}
+
+function renderGroup() {
+  if (users === null) {
+    app.innerHTML = `<h1>👟 Шаги с друзьями</h1><div class="card empty">Загрузка…</div>`;
+    return;
+  }
+  const list = people();
+  const sorted = [...list].sort((a, b) => b.today - a.today);
+  const max = Math.max(1, ...sorted.map(p => p.today));
+  const medals = ["🥇", "🥈", "🥉"];
+  const isMember = me && users[me];
+
+  const rows = sorted.length ? sorted.map((p, i) => `
+    <div class="row">
+      <div class="medal">${p.today > 0 && i < 3 ? medals[i] : i + 1}</div>
+      <div class="grow">
+        <div class="flex" style="justify-content:space-between">
+          <div class="name">${esc(p.name)} ${p.id === me ? '<span class="me-tag">· ты</span>' : ""}</div>
+          <div class="steps">${fmt(p.today)}</div>
+        </div>
+        <div class="bar"><div style="width:${(p.today / max) * 100}%;background:${p.color}"></div></div>
+        <div class="meta">${p.updated ? "обновлено " + ago(p.updated) : "ещё не присылал шаги"}</div>
+      </div>
+    </div>`).join("") : `<div class="empty">Пока никого. Присоединяйся первым 👇</div>`;
+
+  app.innerHTML = `
+    <h1>👟 Шаги с друзьями</h1>
+    <p class="sub">Сегодня, ${new Date().toLocaleDateString("ru-RU", { day: "numeric", month: "long" })}</p>
+    ${loadError ? `<div class="card err">${esc(loadError)}</div>` : ""}
+
+    <div class="card">
+      <div class="flex" style="justify-content:space-between;align-items:center;margin-bottom:4px">
+        <h2 style="margin:0">Таблица лидеров</h2>
+        <button class="secondary small" id="refresh">Обновить</button>
+      </div>
+      ${rows}
+    </div>
+
+    ${list.length ? `<div class="card"><h2>Последние 7 дней</h2>${weekChart(list)}</div>` : ""}
+
+    <div class="card">
+      <h2>Пригласить друга</h2>
+      <p class="hint">Отправь эту ссылку. Друг откроет её, введёт имя и настроит команду.</p>
+      <code>${esc(inviteLink())}</code>
+      <button class="secondary" id="copyInvite">Скопировать ссылку</button>
+    </div>
+
+    ${isMember ? guide() : joinForm(list)}
+  `;
+
+  document.getElementById("refresh").onclick = () => { load(); toast("Обновляю…"); };
+  document.getElementById("copyInvite").onclick = () => copy(inviteLink());
+  document.getElementById("joinForm")?.addEventListener("submit", join);
+  document.querySelectorAll("[data-pick]").forEach(b => b.onclick = () => pickMe(b.dataset.pick));
+  document.querySelectorAll("[data-copy]").forEach(b => b.onclick = () => copy(b.dataset.copy));
+  document.getElementById("forget")?.addEventListener("click", e => { e.preventDefault(); forgetMe(); });
+}
+
+function weekChart(list) {
+  const days = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    days.push(d);
+  }
+  const val = (p, d) => {
+    const k = dayKey(d);
+    return k === dayKey() ? p.today : (p.days[k] || 0);
+  };
+  const max = Math.max(1, ...list.flatMap(p => days.map(d => val(p, d))));
+  const cols = days.map(d => `
+    <div class="day">
+      <div class="bars">
+        ${list.map(p => `<div title="${esc(p.name)}: ${fmt(val(p, d))}" style="height:${(val(p, d) / max) * 100}%;background:${p.color}"></div>`).join("")}
+      </div>
+      <div class="dlabel">${d.toLocaleDateString("ru-RU", { weekday: "short" })}</div>
+    </div>`).join("");
+  const totals = list
+    .map(p => ({ ...p, week: days.reduce((s, d) => s + val(p, d), 0) }))
+    .sort((a, b) => b.week - a.week);
+  const legend = totals.map(p =>
+    `<span style="--dot:${p.color}">${esc(p.name)}: <b>${fmt(p.week)}</b></span>`).join("");
+  return `<div class="chart">${cols}</div><div class="legend">${legend}</div>
+          <p class="hint" style="margin:10px 0 0">Сумма за неделю. История копится с того дня, когда команда начала работать.</p>`;
+}
+
+function joinForm(list) {
+  const pick = list.length ? `
+    <details style="margin-top:16px">
+      <summary>Я уже в группе (другой браузер или телефон)</summary>
+      <p class="hint">Выбери себя, чтобы снова увидеть свой адрес для команды:</p>
+      <div class="pick">${list.map(p => `<button class="secondary small" data-pick="${esc(p.id)}">${esc(p.name)}</button>`).join("")}</div>
+    </details>` : "";
+  return `
+    <div class="card">
+      <h2>Присоединиться</h2>
+      <form id="joinForm">
+        <input id="name" placeholder="Твоё имя" maxlength="30" autocomplete="given-name" required>
+        <button type="submit">Присоединиться</button>
+        <div class="err" id="joinErr"></div>
+      </form>
+      ${pick}
+    </div>`;
+}
+
+function guide() {
+  const url = myUrl();
+  const template = `{"today": ШАГИ, "date": "ДАТА", "days/ДАТА": ШАГИ, "updated": {".sv": "timestamp"}}`;
+  return `
+    <div class="card" id="guide">
+      <h2>Твоя «Быстрая команда»</h2>
+      <p class="hint">Она берёт шаги из приложения «Здоровье» и отправляет их сюда. Настраивается один раз, примерно за 5 минут.</p>
+
+      <p style="margin-bottom:0"><b>Твой личный адрес</b> (никому не отправляй):</p>
+      <code>${esc(url)}</code>
+      <button class="secondary" data-copy="${esc(url)}">Скопировать адрес</button>
+
+      <details style="margin-top:16px" open>
+        <summary>Как собрать команду</summary>
+        <ol>
+          <li>Открой <b>Команды</b> (Shortcuts) → <b>＋</b>. Назови команду «Шаги».</li>
+          <li>Добавь действие <b>«Найти образцы Здоровья»</b> (Find Health Samples):
+            <br>Тип: <b>Шаги</b> · Дата начала: <b>сегодня</b> · Группировать по: <b>День</b>.</li>
+          <li>Добавь <b>«Вычислить статистику»</b> (Calculate Statistics) → <b>Сумма</b> от образцов Здоровья.</li>
+          <li>Добавь <b>«Округлить число»</b> (Round Number) → до <b>единиц</b>.</li>
+          <li>Добавь <b>«Форматировать дату»</b> (Format Date): <b>Текущая дата</b>, формат даты <b>Пользовательский</b>, строка:
+            <code>yyyy-MM-dd</code></li>
+          <li>Добавь <b>«Текст»</b> (Text) и вставь в него шаблон:
+            <code>${esc(template)}</code>
+            <button class="secondary small" data-copy="${esc(template)}">Скопировать шаблон</button>
+            <p class="hint">Затем сотри оба слова <b>ШАГИ</b> и на их место вставь переменную <b>«Округлённое число»</b>.
+            Оба слова <b>ДАТА</b> замени на <b>«Отформатированная дата»</b>. Кавычки вокруг даты оставь.</p></li>
+          <li>Добавь <b>«Получить содержимое URL»</b> (Get Contents of URL):
+            <br>URL: вставь свой личный адрес сверху.
+            <br>Раскрой «Показать больше»: Метод <b>PATCH</b>, Тело запроса <b>Файл</b>, а в поле файла выбери переменную <b>«Текст»</b>.</li>
+          <li>Нажми ▶︎. При первом запуске разреши доступ к шагам. Потом обнови эту страницу: твои шаги появятся в таблице.</li>
+        </ol>
+      </details>
+
+      <details style="margin-top:12px">
+        <summary>Чтобы шаги отправлялись сами</summary>
+        <ol>
+          <li><b>Команды → Автоматизация → ＋ → Приложение.</b> Выбери приложения, которые открываешь часто
+            (Telegram, Instagram…), отметь <b>«Закрыто»</b> и <b>«Запускать сразу»</b>, а в качестве действия выбери команду «Шаги».
+            Тогда шаги будут обновляться каждый раз, когда ты выходишь из этих приложений.</li>
+          <li>Дополнительно: <b>Автоматизация → Время суток</b>, например 13:00, 19:00 и 23:30, тоже с «Запускать сразу».
+            Учти, что пока телефон заблокирован, iOS не даёт читать данные «Здоровья», поэтому такой запуск может пропуститься.</li>
+          <li>Иконку команды можно вынести на экран «Домой» и нажимать вручную.</li>
+        </ol>
+      </details>
+
+      <details style="margin-top:12px">
+        <summary>Если что-то не работает</summary>
+        <ul style="padding-left:20px;margin:0">
+          <li>Ошибка 400: значит, в тексте получился неправильный JSON. Проверь, что ШАГИ стоят без кавычек, а ДАТА в кавычках.</li>
+          <li>Ошибка 401 или «Permission denied»: адрес скопирован не полностью.</li>
+          <li>Шагов меньше, чем в «Здоровье»: проверь, что в шаге 2 стоит «Группировать по: День».</li>
+        </ul>
+      </details>
+
+      <p class="hint" style="margin-top:14px">Добавь эту страницу на экран «Домой»: Safari → Поделиться → «На экран Домой».
+        <br><a href="#" id="forget" style="color:var(--muted)">Это не я</a></p>
+    </div>`;
+}
+
+// ── Старт ──
+window.addEventListener("hashchange", () => {
+  const h = location.hash.slice(1);
+  if (h.length >= 20 && h !== group) {
+    group = h;
+    store.set("group", group);
+    me = store.get("me:" + group);
+    users = null;
+    render();
+    load();
+  }
+});
+document.addEventListener("visibilitychange", () => { if (!document.hidden) load(); });
+setInterval(() => { if (!document.hidden) load(); }, 30000);
+
+render();
+load();
+</script>
+</body>
+</html>
